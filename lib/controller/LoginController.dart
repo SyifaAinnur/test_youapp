@@ -1,55 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:test_youapp/network/api.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:test_youapp/pages/Home/HomeScreen.dart';
+import 'package:test_youapp/route/pages.dart';
+
 
 class LoginController extends GetxController {
-TextEditingController emailController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  Future<void> loginWithEmail() async {
-    var headers = {'Content-Type': 'application/json'};
+  FocusNode emailLoginF = FocusNode();
+  FocusNode passwordLoginF = FocusNode();
+
+  RxBool obscureTextLogin = true.obs;
+  RxBool loadingLogin = false.obs;
+  RxBool isButtonLogin = true.obs;
+
+  void checkButtonStatus() {
+    if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
+      isButtonLogin.value = false;
+    } else {
+      isButtonLogin.value = true;
+    }
+  }
+
+  void loginButton() async {
+    loadingLogin.value = true;
     try {
-      var url = Uri.parse(
-          ApiService.baseurl + ApiService.authEndPoint.loginEmail);
-      Map body = {
-        'email': emailController.text,
-        'password': passwordController.text
-      };
-      http.Response response =
-          await http.post(url, body: jsonEncode(body), headers: headers);
+      var response = await http.get(
+        Uri.parse(
+            "http://techtest.youapp.ai/api/login?email=${emailController.text}&password=${passwordController.text}"),
+        // body: {"email": emailLogin.text, "password": passwordLogin.text},
+      );
+      loadingLogin.value = false;
+      Map<String, dynamic> logdata =
+          jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        if (json['code'] == 0) {
-
-          final SharedPreferences? prefs = await _prefs;
-
-          emailController.clear();
-          passwordController.clear();
-          Get.off(HomeScreen());
-        } else if (json['code'] == 1) {
-          throw jsonDecode(response.body)['message'];
-        }
-      } else {
-        throw jsonDecode(response.body)["Message"] ?? "Unknown Error Occured";
+      if (logdata['message'] == "success") {
+        Get.offAllNamed(Routes.HOME);
+      } else if (logdata['message'] != "success") {
+        Get.defaultDialog(
+          title: "Terjadi kesalahan",
+          middleText: "${logdata['message']}",
+        );
       }
-    } catch (error) {
-      Get.back();
-      showDialog(
-          context: Get.context!,
-          builder: (context) {
-            return SimpleDialog(
-              title: Text('Error'),
-              contentPadding: EdgeInsets.all(20),
-              children: [Text(error.toString())],
-            );
-          });
+    } catch (e) {
+      Get.defaultDialog(
+        title: "Login gagal",
+        middleText: "Periksa koneksi internet",
+      );
     }
   }
 }
+

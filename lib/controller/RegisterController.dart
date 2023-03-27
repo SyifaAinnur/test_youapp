@@ -5,59 +5,91 @@ import 'package:test_youapp/network/api.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:test_youapp/pages/Home/HomeScreen.dart';
+
+import 'package:test_youapp/route/pages.dart';
 
 
 
 class RegisterController extends GetxController {
-  TextEditingController nameController = TextEditingController();
+
+  FocusNode emailFN = FocusNode();
+  FocusNode nameFN = FocusNode();
+  FocusNode passwordFN = FocusNode();
+  FocusNode confirmPasswordFN = FocusNode();
+
   TextEditingController emailController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  RxBool obscureTextpasswordController = true.obs;
+  RxBool obscureTextconfirmPasswordController = true.obs;
 
-  Future<void> registerWithEmail() async {
-    try {
-      var headers = {'Content-Type': 'application/json'};
-      var url = Uri.parse(
-          ApiService.baseurl + ApiService.authEndPoint.registerEmail);
-      Map body = {
-        'name': nameController.text,
-        'email': emailController.text,
-        'password': passwordController.text
-      };
+  RxBool loading = false.obs;
+  RxBool isButton = true.obs;
+  RxBool passwordSame = false.obs;
 
-      http.Response response =
-          await http.post(url, body: jsonEncode(body), headers: headers);
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        if (json['code'] == 0) {
-          var data = json['data'];
-          final SharedPreferences? prefs = await _prefs;
+  void checkButtonStatus() {
+    if (
 
-          await prefs?.setString('data', data);
-          nameController.clear();
-          emailController.clear();
-          passwordController.clear();
-          Get.off(HomeScreen());
-        } else {
-          throw jsonDecode(response.body)["message"] ?? "Unknown Error Occured";
+        ///
+        emailController.text.isNotEmpty &&
+            nameController.text.isNotEmpty &&
+            passwordController.text.isNotEmpty &&
+            confirmPasswordController.text.isNotEmpty
+
+        ///
+        ) {
+      isButton.value = false;
+    } else {
+      isButton.value = true;
+    }
+  }
+
+  void checkKesamaanPassword() {
+    if (passwordController.text == confirmPasswordController.text) {
+      passwordSame.value = true;
+    } else {
+      passwordSame.value = false;
+    }
+  }
+
+  void registerButton() async {
+    if (passwordController.text == confirmPasswordController.text) {
+      try {
+        loading.value = true;
+        var response = await http.post(
+          Uri.parse("http://techtest.youapp.ai/api/register"),
+          body: {
+            "name": nameController.text,
+            "email": emailController.text,
+            "password": passwordController.text
+          },
+        );
+        loading.value = false;
+        Map<String, dynamic> logdata =
+            jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (logdata['message'] == "success") {
+          Get.offAllNamed(Routes.HOME);
+        } else if (logdata['message'] != "success") {
+          Get.defaultDialog(
+            title: "Terjadi kesalahan",
+            middleText: "${logdata['message']}",
+          );
         }
-      } else {
-        throw jsonDecode(response.body)["Message"] ?? "Unknown Error Occured";
+      } catch (e) {
+        Get.defaultDialog(
+          title: "Login gagal",
+          middleText: "Periksa koneksi internet",
+        );
       }
-    } catch (e) {
-      Get.back();
-      showDialog(
-          context: Get.context!,
-          builder: (context) {
-            return SimpleDialog(
-              title: Text('Error'),
-              contentPadding: EdgeInsets.all(20),
-              children: [Text(e.toString())],
-            );
-          });
+    } else {
+      Get.defaultDialog(
+        title: "Password tidak sama",
+        middleText: "Password harus sama",
+      );
     }
   }
 }

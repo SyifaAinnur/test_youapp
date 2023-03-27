@@ -1,8 +1,8 @@
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter/material.dart';
-import 'package:test_youapp/pages/page_login.dart';
-import 'package:test_youapp/pages/page_register.dart';
+import 'package:test_youapp/pages/Login/page_login.dart';
+import 'package:test_youapp/pages/Register/page_register.dart';
 
 class OnboardScreen extends StatelessWidget {
   const OnboardScreen({super.key});
