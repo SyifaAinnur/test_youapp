@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
+import 'package:test_youapp/pages/About/AboutScreen.dart';
 import 'package:test_youapp/pages/Home/HomeScreen.dart';
 import 'package:test_youapp/pages/Home/HomeBinding.dart';
 import 'package:test_youapp/pages/Login/LoginBinding.dart';
 import 'package:test_youapp/pages/Login/page_login.dart';
 import 'package:test_youapp/pages/Register/RegisterBinding.dart';
 import 'package:test_youapp/pages/Register/page_register.dart';
+import 'package:test_youapp/pages/About/AboutBinding.dart';
 
 part 'route.dart';
 
@@ -30,9 +32,9 @@ class Pages {
       binding: RegisterBinding(),
     ),
         GetPage(
-      name: _Paths.HOME,
-      page: () => HomeScreen(),
-      binding: HomeBinding(),
+      name: _Paths.ABOUT,
+      page: () => AboutScren(),
+      binding: AboutBinding(),
     ),
   ];
 
